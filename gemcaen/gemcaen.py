@@ -33,6 +33,7 @@ class BoardBase:
         self.cfg_keys = ["CAENHV_BOARD_TYPE","CAENHV_LINK_TYPE","CAENHV_BOARD_ADDRESS","CAENHV_USER","CAENHV_PASSWORD","SLOT","LAYER"] 
         self.good_config()
         self.cfg = load_config()[self.setup_name]
+        self.board_slot = self.cfg["SLOT"]
         self.handle = self.get_cratehandle()
 
     def good_config(self):
@@ -54,6 +55,21 @@ class BoardBase:
             return handle
         except CAENHVError as err:
             print(f"Got error: {err}\nExiting ...")
+
+
+    def get_board_status(self):
+        crate_map = get_crate_map(self.handle)
+        board_name = crate_map["models"][self.board_slot]
+        description = crate_map["descriptions"][self.board_slot]
+        number_of_channels = crate_map["channels"][self.board_slot]
+        print(board_name,"\n",description,"\n",number_of_channels)
+
+        for ch in range(number_of_channels):
+            quantities = get_channel_parameters(self.handle,self.board_slot,ch)
+            channel_name = get_channel_name(self.handle,self.board_slot,ch)
+            for quantity in quantities:
+                print(f"Board{board_name} {channel_name}\t{quantity} = {get_channel_parameter(self.handle,self.board_slot,ch,quantity)}")
+            print()
 
 c = BoardBase("IntegrationStand")
 
