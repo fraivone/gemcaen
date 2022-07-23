@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "gemcaen"
+version = "0.1.0"
+description = ""
+authors = ["ivone"]
+
+[[tool.poetry.packages]]
+include = "gemcaen" 
+
+
+[tool.poetry.dependencies]
+python = "^3.8"
+pycaenhv = {git = "https://github.com/vasoto/pycaenhv.git"}
+PyYAML = "^6.0"
+setuptools = "^63.2.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
