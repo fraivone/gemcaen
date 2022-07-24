@@ -30,14 +30,20 @@ def singleton(cls):
 class BoardBase:
     def __init__(self,setup_name):
         self.setup_name = setup_name
-        self.cfg_keys = ["CAENHV_BOARD_TYPE","CAENHV_LINK_TYPE","CAENHV_BOARD_ADDRESS","CAENHV_USER","CAENHV_PASSWORD","SLOT","LAYER"] 
+        self.cfg_keys = ["CAENHV_BOARD_TYPE","CAENHV_LINK_TYPE","CAENHV_BOARD_ADDRESS","CAENHV_USER","CAENHV_PASSWORD","SLOT"] 
         self.check_good_config()
         self.cfg = load_config()[self.setup_name]
         self.board_slot = self.cfg["SLOT"]
         self.handle = self.get_cratehandle()
         
+        self.crate_map = get_crate_map(self.handle)
 
-
+        self.board_name = self.crate_map["models"][self.board_slot]
+        self.board_description = self.crate_map["descriptions"][self.board_slot]
+        
+        self.n_channels = self.crate_map["channels"][self.board_slot]
+        self.channel_names_map, self.channel_quantities_map = self.map_channels()  ## channel_<name/quant>_map[ch_index] = ch_<name/quant>
+        
     def check_good_config(self):
         if self.setup_name in load_config().keys():
             if all(key in load_config()[self.setup_name].keys()  for key in self.cfg_keys):
@@ -60,30 +66,38 @@ class BoardBase:
 
 
     def print_board_status(self):
-        crate_map = get_crate_map(self.handle)
-        board_name = crate_map["models"][self.board_slot]
-        description = crate_map["descriptions"][self.board_slot]
-        number_of_channels = crate_map["channels"][self.board_slot]
-        print(f"Board {board_name} status --> {description}")
-
-        cols = ["Ch_Name"]
-        rows = []
+        print(f"Board {self.board_name} status --> {self.board_description}")
+        cols, rows = ["Ch_Number","Ch_Name"], []
         
-        for ch in range(number_of_channels):
-            row = []
-            quantities = get_channel_parameters(self.handle,self.board_slot,ch)
-            channel_name = get_channel_name(self.handle,self.board_slot,ch)
-            row.append(channel_name)
-
-            for quantity in quantities:
+        for ch,channel_name in self.channel_map.items():
+            row = [channel_name]
+            for quantity in self.channel_quantities_map[ch]:
                 channel_value = get_channel_parameter(self.handle,self.board_slot,ch,quantity)
-                row.append(channel_value)
+                row.append(round(channel_value,3))    
             rows.append(row)
-        cols = cols + quantities
-        print(tf.generate_table(rows, cols, grid_style=tf.FancyGrid()))
+        
+        cols = cols + self.channel_quantities_map[ch] ## assume all board's channels have same quantities
+        print(tf.generate_table(rows, cols, grid_style=tf.AlternatingRowGrid()))
+    
+    def map_channels(self):
+        channel_names_map = dict()
+        channel_quantities_map = dict()
+        for ch in range(self.n_channels):
+            channel_names_map[ch] = get_channel_name(self.handle,self.board_slot,ch)
+            channel_quantities_map[ch] = get_channel_parameters(self.handle,self.slot,ch)
+        return  channel_names_map,channel_quantities_map
 
-c = BoardBase("IntegrationStand")
+
+    def get_channel_value(self,channel_index:int,quantity:str):
+        if channel_index not in range(self.n_channels):
+            raise ValueError("Invalid channel index ",channel_index)
+        if quantity not in self.channel_quantities_map[channel_index]:
+            raise ValueError("Invalid quantity ",quantity,". Valid quantities are ",self.channel_quantities_map)
+        return get_channel_parameter(self.handle,self.slot,channel_index,quantity)
+
+c = BoardBase("IntegrationStand_Scintillator")
 c.print_board_status()
+print(c.get_channel_value(2,"VMon"))
 
 
 
