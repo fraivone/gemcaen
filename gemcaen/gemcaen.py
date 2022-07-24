@@ -22,7 +22,7 @@ def load_config():
 #         @functools.wraps(func)
 #         def wrapper(*args,**kwargs):
 #             for _ in range(max_rep): 
-#                 print(f"Call {_} to {func.__name__!r}")
+#                 print(f"Call number {_} to {func.__name__!r}")
 #                 value = func(*args,**kwargs)
 #                 if value == success_value: break
 #                 time.sleep(sleep_time)
@@ -105,18 +105,55 @@ class BoardBase:
         print(tf.generate_table(rows, cols, grid_style=tf.AlternatingRowGrid()))
 
     def get_channel_value(self,channel_index:int,quantity:str):
-        if validChannel(channel_index) and validChannel(channel_index,quantity):
+        if self.validChannel(channel_index) and self.validQuantity(channel_index,quantity):
             return get_channel_parameter(self.handle,self.board_slot,channel_index,quantity)
 
     def set_channel_value(self,channel_index:int,quantity:str,value):
-        if validChannel(channel_index) and validChannel(channel_index,quantity) and isinstance(value, numbers.Number):
-            set_channel_parameter(self.handle,self.slot,channel_index,quantity, value)
-
-c = BoardBase("IntegrationStand_Scintillator")
-c.print_board_status()
-print(c.get_channel_value(2,"VMon"))
-print(c.set_channel_value(2,"VMon","ciao"))
+        if self.validChannel(channel_index) and self.validQuantity(channel_index,quantity) and isinstance(value, numbers.Number):
+            set_channel_parameter(self.handle,self.board_slot,channel_index,quantity, value)
+        else:
+            raise ValueError("Invalid value ",value," for ",quantity)
 
 
+class GemBoard(BoardBase):
+    __Divider_Resistors = {"G3Bot":0.625007477,"G3Top":0.525001495,"G2Bot":0.874992523,"G2Top":0.550002991,"G1Bot":0.438004665,"G1Top":0.560006579,"Drift":1.125007477}
+    def __init__(self,setup_name,gem_layer=None):
+        super().__init__(setup_name)
+        if gem_layer not in [1,2]: raise ValueError("Invalid gem_layer parsed ",gem_layer) ## parse gem layer
+        else: self.gem_layer = gem_layer
+        if "A1515" not in self.board_name:raise ValueError(f"Board {self.board_name} not a GEM HV Board") ## ensure GEM HV board
+        
+        self.n_channels = 7  ## restrict the channel to 7
+        self._channels = list(range(7)) if self.gem_layer==1 else list(range(7,14))
+        
+        for k in (x for x in channel_names_map.keys() if x not in self._channels): ## purge unused channels
+            self.channel_names_map.drop(k,None)
+            self.channel_quantities_map.drop(k,None)
 
+    def set_monitorables(self,monitorables_list:list):
+        if set( monitorables_list ).issubset( set( self.channel_quantities_map[self._channels[0]] )  ): ## check if parsed monitorables are subset of possible quantities
+            self.set_monitorables = monitorables_list
+        else:
+            raise ValueError("Parsed monitorables ",monitorables_list, " not a subset of ",self._monitorables)
+    
+    def get_Ieq(self):
+        ieq = 0
+        for ch in self._channels:
+            if self.get_channel_value(ch,"Pw") == 1:
+                ieq += self.get_channel_value(ch,"VMon")
+            else: 
+                print(f"Electrode {self.channel_names_map[ch]} is OFF. IEq can't be evaluated")
+                ieq = 0
+                break
+        return round(float(ieq)/4.698023207	,3)
 
+    def monitor(self):
+        monitored_data = dict()
+        for ch in self._channels:
+            channel_data = dict()
+            for mon in self.set_monitorables:
+                channel_data[mon] = self.get_channel_value(ch,mon)
+            monitored_data[ch] = channel_data
+        return monitored_data
+
+c = GemBoard("IntegrationStand")
