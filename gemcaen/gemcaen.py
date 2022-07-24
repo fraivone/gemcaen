@@ -125,16 +125,18 @@ class GemBoard(BoardBase):
         
         self.n_channels = 7  ## restrict the channel to 7
         self._channels = list(range(7)) if self.gem_layer==1 else list(range(7,14))
+        self._monitorables = ["VMon","IMon","I0Set","V0Set","Pw","Status"]
         
-        for k in (x for x in channel_names_map.keys() if x not in self._channels): ## purge unused channels
-            self.channel_names_map.drop(k,None)
-            self.channel_quantities_map.drop(k,None)
+        for k in list(self.channel_names_map): ## purge unused channels
+            if k not in self._channels:
+                self.channel_names_map.pop(k,None)
+                self.channel_quantities_map.pop(k,None)
 
     def set_monitorables(self,monitorables_list:list):
         if set( monitorables_list ).issubset( set( self.channel_quantities_map[self._channels[0]] )  ): ## check if parsed monitorables are subset of possible quantities
             self.set_monitorables = monitorables_list
         else:
-            raise ValueError("Parsed monitorables ",monitorables_list, " not a subset of ",self._monitorables)
+            raise ValueError("Parsed monitorables ",monitorables_list, " not a subset of ",self.channel_quantities_map[self._channels[0]])
     
     def get_Ieq(self):
         ieq = 0
@@ -156,4 +158,6 @@ class GemBoard(BoardBase):
             monitored_data[ch] = channel_data
         return monitored_data
 
-c = GemBoard("IntegrationStand")
+
+c =  GemBoard("IntegrationStand",1)
+c.monitor()
