@@ -1,7 +1,7 @@
 import pathlib
 import yaml
-import pkg_resources
 import functools
+import tableformatter as tf
 
 from pycaenhv.wrappers import init_system, deinit_system, get_board_parameters, get_crate_map, get_channel_parameters,get_channel_parameter, list_commands,get_channel_parameter_property,get_channel_name,set_channel_parameter
 from pycaenhv.enums import CAENHV_SYSTEM_TYPE, LinkType
@@ -31,12 +31,14 @@ class BoardBase:
     def __init__(self,setup_name):
         self.setup_name = setup_name
         self.cfg_keys = ["CAENHV_BOARD_TYPE","CAENHV_LINK_TYPE","CAENHV_BOARD_ADDRESS","CAENHV_USER","CAENHV_PASSWORD","SLOT","LAYER"] 
-        self.good_config()
+        self.check_good_config()
         self.cfg = load_config()[self.setup_name]
         self.board_slot = self.cfg["SLOT"]
         self.handle = self.get_cratehandle()
+        
 
-    def good_config(self):
+
+    def check_good_config(self):
         if self.setup_name in load_config().keys():
             if all(key in load_config()[self.setup_name].keys()  for key in self.cfg_keys):
                 return True
@@ -57,21 +59,35 @@ class BoardBase:
             print(f"Got error: {err}\nExiting ...")
 
 
-    def get_board_status(self):
+    def print_board_status(self):
         crate_map = get_crate_map(self.handle)
         board_name = crate_map["models"][self.board_slot]
         description = crate_map["descriptions"][self.board_slot]
         number_of_channels = crate_map["channels"][self.board_slot]
-        print(board_name,"\n",description,"\n",number_of_channels)
+        print(f"Board {board_name} status --> {description}")
 
+        cols = ["Ch_Name"]
+        rows = []
+        
         for ch in range(number_of_channels):
+            row = []
             quantities = get_channel_parameters(self.handle,self.board_slot,ch)
             channel_name = get_channel_name(self.handle,self.board_slot,ch)
+            row.append(channel_name)
+
             for quantity in quantities:
-                print(f"Board{board_name} {channel_name}\t{quantity} = {get_channel_parameter(self.handle,self.board_slot,ch,quantity)}")
-            print()
+                channel_value = get_channel_parameter(self.handle,self.board_slot,ch,quantity)
+                row.append(channel_value)
+            rows.append(row)
+        cols = cols + quantities
+        print(tf.generate_table(rows, cols, grid_style=tf.FancyGrid()))
 
 c = BoardBase("IntegrationStand")
+c.print_board_status()
+
+
+
+
 
 
 
