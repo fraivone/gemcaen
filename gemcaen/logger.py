@@ -22,7 +22,10 @@ class BaseLogger:
         self.update_board_quantities = True
     
     def store_dict(self,data_dict:dict,maxsize=3): ## stores log file, keeping size < maxsize MB            
-        json.dump( data_dict, open( self.outfile, 'a+' ) )
+        with open(self.outfile, "a+") as o:
+            json.dump( data_dict, o )
+            o.write('\n') 
+
 
         size = os.path.getsize(self.outfile)
         if round(size / 1024**2,2) > maxsize: ## 3 MB per log file
