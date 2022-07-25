@@ -4,6 +4,7 @@ import functools
 import tableformatter as tf
 import numbers
 import socket
+import time
 
 from pycaenhv.wrappers import init_system, deinit_system, get_board_parameters, get_crate_map, get_channel_parameters,get_channel_parameter, list_commands,get_channel_parameter_property,get_channel_name,set_channel_parameter
 from pycaenhv.enums import CAENHV_SYSTEM_TYPE, LinkType
@@ -57,6 +58,7 @@ class BoardBase:
         self._channels = list(range(self.n_channels))
         self.channel_names_map, self.channel_quantities_map = self.map_channels()  ## channel_<name/quant>_map[ch_index] = ch_<name/quant>       
 
+    ## Always makes sure to close the connection to the mainframe
     def __enter__(self):
         print(f"Init mainframe {self.hostname} ({self.cfg['CAENHV_BOARD_ADDRESS']})")
         return self
@@ -64,6 +66,9 @@ class BoardBase:
     def __exit__(self,type,value,traceback):
         print(f"Deinit mainframe {self.hostname} ({self.cfg['CAENHV_BOARD_ADDRESS']})")
         deinit_system(self.handle)
+        if type==KeyboardInterrupt:
+            print("Terminating due to keyboard interrupt")
+            return True
 
     def check_good_config(self):
         if self.setup_name in load_config().keys():
