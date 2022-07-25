@@ -3,6 +3,7 @@ import yaml
 import functools
 import tableformatter as tf
 import numbers
+import socket
 
 from pycaenhv.wrappers import init_system, deinit_system, get_board_parameters, get_crate_map, get_channel_parameters,get_channel_parameter, list_commands,get_channel_parameter_property,get_channel_name,set_channel_parameter
 from pycaenhv.enums import CAENHV_SYSTEM_TYPE, LinkType
@@ -36,22 +37,34 @@ def load_config():
 #     return decorator_repeat_until
 
 class BoardBase:
+    """ Base class to handle a CAEN board """
     def __init__(self,setup_name):
         self.setup_name = setup_name
         self.cfg_keys = ["CAENHV_BOARD_TYPE","CAENHV_LINK_TYPE","CAENHV_BOARD_ADDRESS","CAENHV_USER","CAENHV_PASSWORD","SLOT"] 
         self.check_good_config()
         self.cfg = load_config()[self.setup_name]
         self.board_slot = self.cfg["SLOT"]
+        self.hostname = socket.gethostbyaddr(str(self.cfg["CAENHV_BOARD_ADDRESS"]))[0]
+
         self.handle = self.get_cratehandle()
-        
         self.crate_map = get_crate_map(self.handle)
 
         self.board_name = self.crate_map["models"][self.board_slot]
         self.board_description = self.crate_map["descriptions"][self.board_slot]
+        self._monitorables = ["VMon","IMon","I0Set","V0Set","Pw","Status"]
         
         self.n_channels = self.crate_map["channels"][self.board_slot]
-        self.channel_names_map, self.channel_quantities_map = self.map_channels()  ## channel_<name/quant>_map[ch_index] = ch_<name/quant>
-        
+        self._channels = list(range(self.n_channels))
+        self.channel_names_map, self.channel_quantities_map = self.map_channels()  ## channel_<name/quant>_map[ch_index] = ch_<name/quant>       
+
+    def __enter__(self):
+        print(f"Init mainframe {self.hostname} ({self.cfg['CAENHV_BOARD_ADDRESS']})")
+        return self
+    
+    def __exit__(self,type,value,traceback):
+        print(f"Deinit mainframe {self.hostname} ({self.cfg['CAENHV_BOARD_ADDRESS']})")
+        deinit_system(self.handle)
+
     def check_good_config(self):
         if self.setup_name in load_config().keys():
             if all(key in load_config()[self.setup_name].keys()  for key in self.cfg_keys):
@@ -90,6 +103,12 @@ class BoardBase:
             channel_quantities_map[ch] = get_channel_parameters(self.handle,self.board_slot,ch)
         return  channel_names_map,channel_quantities_map
 
+    def set_monitorables(self,monitorables_list:list):
+        if set( monitorables_list ).issubset( set( self.channel_quantities_map[self._channels[0]] )  ): ## check if parsed monitorables are subset of possible quantities
+            self._monitorables = monitorables_list
+        else:
+            raise ValueError("Parsed monitorables ",monitorables_list, " not a subset of ",self.channel_quantities_map[self._channels[0]])
+
     def print_board_status(self):
         print(f"Board {self.board_name} status --> {self.board_description}")
         cols, rows = ["Ch_Number","Ch_Name"], []
@@ -114,6 +133,22 @@ class BoardBase:
         else:
             raise ValueError("Invalid value ",value," for ",quantity)
 
+    def monitor(self):
+        monitored_data = dict()
+        for ch in self._channels:
+            channel_data = dict()
+            for mon in self._monitorables:
+                channel_data[mon] = self.get_channel_value(ch,mon)
+            monitored_data[ch] = channel_data
+
+        monitored_data["setup"] = self.setup_name
+        monitored_data["ip"] = self.cfg['CAENHV_BOARD_ADDRESS']
+        monitored_data["slot"] = self.board_slot
+        monitored_data["time"] = time.time()
+
+
+        return monitored_data
+
 
 class GemBoard(BoardBase):
     __Divider_Resistors = {"G3Bot":0.625007477,"G3Top":0.525001495,"G2Bot":0.874992523,"G2Top":0.550002991,"G1Bot":0.438004665,"G1Top":0.560006579,"Drift":1.125007477}
@@ -125,18 +160,11 @@ class GemBoard(BoardBase):
         
         self.n_channels = 7  ## restrict the channel to 7
         self._channels = list(range(7)) if self.gem_layer==1 else list(range(7,14))
-        self._monitorables = ["VMon","IMon","I0Set","V0Set","Pw","Status"]
         
         for k in list(self.channel_names_map): ## purge unused channels
             if k not in self._channels:
                 self.channel_names_map.pop(k,None)
                 self.channel_quantities_map.pop(k,None)
-
-    def set_monitorables(self,monitorables_list:list):
-        if set( monitorables_list ).issubset( set( self.channel_quantities_map[self._channels[0]] )  ): ## check if parsed monitorables are subset of possible quantities
-            self.set_monitorables = monitorables_list
-        else:
-            raise ValueError("Parsed monitorables ",monitorables_list, " not a subset of ",self.channel_quantities_map[self._channels[0]])
     
     def get_Ieq(self):
         ieq = 0
@@ -148,16 +176,3 @@ class GemBoard(BoardBase):
                 ieq = 0
                 break
         return round(float(ieq)/4.698023207	,3)
-
-    def monitor(self):
-        monitored_data = dict()
-        for ch in self._channels:
-            channel_data = dict()
-            for mon in self.set_monitorables:
-                channel_data[mon] = self.get_channel_value(ch,mon)
-            monitored_data[ch] = channel_data
-        return monitored_data
-
-
-c =  GemBoard("IntegrationStand",1)
-c.monitor()
