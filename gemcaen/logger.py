@@ -6,6 +6,8 @@ import math
 import time
 import os
 from deepdiff import DeepDiff
+import influxdb_client
+from influxdb_client.client.write_api import SYNCHRONOUS
 
 class BaseLogger:
     __outdir = pathlib.Path(__file__).parent / "logs"
@@ -35,6 +37,38 @@ class BaseLogger:
 
     def yieldBoard(self):
         yield  BaseBoard(self.setup_name)
+        
+    def updateDB(self,data):
+        channel_names = [
+            "G3Bot",
+            "G3Top",
+            "G2Bot",
+            "G2Top",
+            "G1Bot",
+            "G1Top",
+            "Drift"
+        ]
+
+        influx_config = dict(
+            bucket = "GEM 904 integration stand",
+            org = "CMS GEM project",
+            token = "mDg5QyXVh3DxQcxdFtEqnPDwaiq4N_Vt5TLqJCx2c2nsl1Kuyhj8wiF0agLWgvkLsDevjBXpuDKUR1Zyms5DsA==",
+            url = "http://gem904bigscreens:8086"
+        )
+
+        # Instantiate InfluxDB client and connect:
+        client = influxdb_client.InfluxDBClient(
+            url=influx_config["url"],
+            token=influx_config["token"],
+            org=influx_config["org"]
+        )
+        write_api = client.write_api(write_options=SYNCHRONOUS)
+
+        for ch,values in data.items():
+            if type(ch) == int:
+                for quantity,value in values.items():
+                    point = influxdb_client.Point(self.setup_name).tag("ChannelName",channel_names[ch%7]).field(quantity,value)
+                    write_api.write(bucket=influx_config["bucket"], org=influx_config["org"], record=point)
 
     def log(self):
         prev_data = dict()
@@ -49,6 +83,7 @@ class BaseLogger:
                 self.store_dict(monitored_data)
                 print(f"[{datetime.today().strftime('%Y-%m-%d %H:%M:%S')}] Stored data for setup {self.setup_name}")
                 prev_data = monitored_data
+        
 
 class GemLogger(BaseLogger):
     
@@ -68,11 +103,13 @@ class GemLogger(BaseLogger):
                     continue
                 self.store_dict(monitored_data)
                 print(f"[{datetime.today().strftime('%Y-%m-%d %H:%M:%S')}] Stored data for setup {self.setup_name}")
+                self.updateDB(monitored_data)
+                print(f"[{datetime.today().strftime('%Y-%m-%d %H:%M:%S')}] Updated DB for setup {self.setup_name}")
                 prev_data = monitored_data
 
 
 if __name__ == '__main__':
 
 
-    b = GemLogger("IntegrationStand",2)
+    b = GemLogger("IntegrationStand",1)
     b.log()

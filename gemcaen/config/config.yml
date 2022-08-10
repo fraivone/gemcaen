@@ -1,11 +1,11 @@
 GEMBoard_Monitorables: [V0Set, I0Set, Trip, VMon, IMon, IMonReal, IMonDet, Status, Temp, Pw, ImRange, ZCDetect, ZCAdjust]
 IntegrationStand: 
-  CAENHV_BOARD_TYPE: SY1527
+  CAENHV_BOARD_TYPE: SY4527
   CAENHV_LINK_TYPE: TCPIP
-  CAENHV_BOARD_ADDRESS: 128.141.143.248
-  CAENHV_USER: banana
-  CAENHV_PASSWORD: banana
-  SLOT: 5
+  CAENHV_BOARD_ADDRESS: 128.141.143.186
+  CAENHV_USER: admin
+  CAENHV_PASSWORD: admin
+  SLOT: 0
 IntegrationStand_Scintillator:
   CAENHV_BOARD_TYPE: SY1527
   CAENHV_LINK_TYPE: TCPIP
