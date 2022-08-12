@@ -1,5 +1,4 @@
 import pathlib
-import yaml
 import functools
 import tableformatter as tf
 import numbers
@@ -11,24 +10,12 @@ from pycaenhv.enums import CAENHV_SYSTEM_TYPE, LinkType
 from pycaenhv.errors import CAENHVError
 
 
-CONFIG_PATH = pathlib.Path(__file__).parent / "config/config.yml"
-
-def load_config():
-    with CONFIG_PATH.open() as ymlfile:
-        cfg = yaml.full_load(ymlfile)
-    return cfg
-
 class BaseBoard:
     """ Base class to handle a CAEN board """
-
-    _cfg_keys = ["CAENHV_BOARD_TYPE","CAENHV_LINK_TYPE","CAENHV_BOARD_ADDRESS","CAENHV_USER","CAENHV_PASSWORD","SLOT"] 
-
-    def __init__(self,setup_name):
+    def __init__(self,cfg_HW):
         self._inside_context = False
 
-        self.setup_name = setup_name
-        self.check_good_config()
-        self.cfg = load_config()[self.setup_name]
+        self.cfg = cfg_HW
         self.board_slot = self.cfg["SLOT"]
         self.hostname = socket.gethostbyaddr(str(self.cfg["CAENHV_BOARD_ADDRESS"]))[0]
         
@@ -65,11 +52,6 @@ class BaseBoard:
         if not self._inside_context:
             raise ValueError(f"Method has to be executed in a context manager, i.e \nwith {self.__class__.__name__}() as b:\n\t....")
 
-    def check_good_config(self):
-        if self.setup_name in load_config().keys():
-            if all(key in load_config()[self.setup_name].keys()  for key in self._cfg_keys):
-                return True
-        raise ValueError(self.setup_name, " has an invalid/incomplete configuration in ",CONFIG_PATH)
 
     def get_cratehandle(self):
         self._ContextManager_ensure()
@@ -155,7 +137,6 @@ class BaseBoard:
         self._ContextManager_ensure()
         monitored_data = self.monitor()
 
-        monitored_data["setup"] = self.setup_name
         monitored_data["ip"] = self.cfg['CAENHV_BOARD_ADDRESS']
         monitored_data["slot"] = self.board_slot
         monitored_data["time"] = time.time()
@@ -165,8 +146,8 @@ class BaseBoard:
 
 class GemBoard(BaseBoard):
     __Divider_Resistors = {"G3BOT":0.625007477,"G3TOP":0.525001495,"G2BOT":0.874992523,"G2TOP":0.550002991,"G1BOT":0.438004665,"G1TOP":0.560006579,"G0BOT":1.125007477}
-    def __init__(self,setup_name):
-        super().__init__(setup_name) ## init parent class
+    def __init__(self):
+        super().__init__() ## init parent class
         self._cfg_keys.append("LAYER") #GEM board must be specified with layer
         self.check_good_config()
         self.gem_layer = self.cfg["LAYER"]
