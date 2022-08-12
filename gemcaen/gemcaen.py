@@ -33,7 +33,7 @@ class BaseBoard:
         self.board_description = self.crate_map["descriptions"][self.board_slot]
 
         self.n_channels = self.crate_map["channels"][self.board_slot]
-        self._channels = list(range(self.n_channels))
+        self._channels = list(range(self.n_channels)) ## take all possible channels
         self.channel_names_map, self.channel_quantities_map = self.map_channels()  ## channel_<name/quant>_map[ch_index] = ch_<name/quant>
         
         return self
@@ -89,6 +89,18 @@ class BaseBoard:
             channel_quantities_map[ch] = get_channel_parameters(self.handle,self.board_slot,ch)
         return  channel_names_map,channel_quantities_map
 
+    def set_channels(self,channels_list:list):
+        if all( avail_channel in self._channels for desired_channel in channels_list): ## parsed channel list is contained in the available channels
+            self.n_channels = len(channels_list)
+            self._channels = channels_list
+
+            for k in list(self.channel_names_map): ## purge unused channels
+                if k not in self._channels:
+                    self.channel_names_map.pop(k,None)
+                    self.channel_quantities_map.pop(k,None)
+        else:
+            raise ValueError("Invalid parsed channel list ",channels_list)
+    
     def set_monitorables(self,monitorables_list:list):
         self._ContextManager_ensure()
         self._monitorables = monitorables_list
@@ -148,8 +160,6 @@ class GemBoard(BaseBoard):
     __Divider_Resistors = {"G3BOT":0.625007477,"G3TOP":0.525001495,"G2BOT":0.874992523,"G2TOP":0.550002991,"G1BOT":0.438004665,"G1TOP":0.560006579,"G0BOT":1.125007477}
     def __init__(self):
         super().__init__() ## init parent class
-        self._cfg_keys.append("LAYER") #GEM board must be specified with layer
-        self.check_good_config()
         self.gem_layer = self.cfg["LAYER"]
         self._monitorables = ["VMon","IMon","I0Set","V0Set","Pw","Status","Ieq"]
         
@@ -162,14 +172,11 @@ class GemBoard(BaseBoard):
             self.close()
             raise ValueError(f"Board {self.board_name!r} on slot {self.board_slot} not a GEM HV Board.") ## ensure GEM HV board
         
-        self.n_channels = 7  ## restrict the channel to 7
-        self._channels = list(range(7)) if self.gem_layer==1 else list(range(7,14))
+        if self.gem_layer == 1:
+            self.set_channels(list(range(7)))
+        else:
+            self.set_channels(list(range(7,14)))
         
-        for k in list(self.channel_names_map): ## purge unused channels
-            if k not in self._channels:
-                self.channel_names_map.pop(k,None)
-                self.channel_quantities_map.pop(k,None)
-        return self
     
     def __exit__(self,type,value,traceback):
         super().__exit__(type,value,traceback)
