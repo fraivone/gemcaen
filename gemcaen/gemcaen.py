@@ -9,6 +9,9 @@ from pycaenhv.wrappers import init_system, deinit_system, get_board_parameters, 
 from pycaenhv.enums import CAENHV_SYSTEM_TYPE, LinkType
 from pycaenhv.errors import CAENHVError
 
+## TODO 
+# Possible to simplify channel maging? The variables _channels,n_channels,channel_names_map,channel_quantities_map may be merged into 2
+
 
 class BaseBoard:
     """ Base class to handle a CAEN board """
@@ -158,8 +161,8 @@ class BaseBoard:
 
 class GemBoard(BaseBoard):
     __Divider_Resistors = {"G3BOT":0.625007477,"G3TOP":0.525001495,"G2BOT":0.874992523,"G2TOP":0.550002991,"G1BOT":0.438004665,"G1TOP":0.560006579,"G0BOT":1.125007477}
-    def __init__(self):
-        super().__init__() ## init parent class
+    def __init__(self,cfg_HW):
+        super().__init__(cfg_HW) ## init parent class
         self.gem_layer = self.cfg["LAYER"]
         self._monitorables = ["VMon","IMon","I0Set","V0Set","Pw","Status","Ieq"]
         

@@ -1,29 +1,45 @@
 GEMBoard_Monitorables: [V0Set, I0Set, Trip, VMon, IMon, IMonReal, IMonDet, Status, Temp, Pw, ImRange, ZCDetect, ZCAdjust]
 ME0CosmicStand: 
-  CAENHV_BOARD_TYPE: SY4527
-  CAENHV_LINK_TYPE: TCPIP
-  CAENHV_BOARD_ADDRESS: 128.141.143.186
-  CAENHV_USER: admin
-  CAENHV_PASSWORD: admin
-  SLOT: 0
-  LAYER: 1
-  DB_BUCKET: GEM 904 cosmic ME0 stand
-  ORG: CMS GEM project
-  TOKEN: mDg5QyXVh3DxQcxdFtEqnPDwaiq4N_Vt5TLqJCx2c2nsl1Kuyhj8wiF0agLWgvkLsDevjBXpuDKUR1Zyms5DsA==
-  URL: http://gem904bigscreens:8086
+  ## Quantity to be monitored
+  Monitorables: ["VMon","IMon","I0Set","V0Set","Pw","Status"]
+  ## Bool to specifty it is a GEM detector
+  isGEMDetector: True
+  ## Mainframe and board coordinates
+  HW:
+    CAENHV_BOARD_TYPE: SY4527
+    CAENHV_LINK_TYPE: TCPIP
+    CAENHV_BOARD_ADDRESS: 128.141.143.186
+    CAENHV_USER: admin
+    CAENHV_PASSWORD: admin
+    SLOT: 0
+    LAYER: 1  ## If TYPE == GEM_Detecor specify layer, otherwise specify channels to be monitored in a list [1,...]
+  ## influxDB coordinates
+  influxDB:
+    DB_BUCKET: GEM 904 cosmic ME0 stand
+    ORG: CMS GEM project
+    TOKEN: mDg5QyXVh3DxQcxdFtEqnPDwaiq4N_Vt5TLqJCx2c2nsl1Kuyhj8wiF0agLWgvkLsDevjBXpuDKUR1Zyms5DsA==
+    URL: http://gem904bigscreens:8086
 
 IntegrationStand: 
-  CAENHV_BOARD_TYPE: SY1527
-  CAENHV_LINK_TYPE: TCPIP
-  CAENHV_BOARD_ADDRESS: 128.141.143.248
-  CAENHV_USER: gemuser
-  CAENHV_PASSWORD: gemuser
-  SLOT: 5
-  LAYER: 2
-  DB_BUCKET: GEM 904 integration stand
-  ORG: CMS GEM project
-  TOKEN: mDg5QyXVh3DxQcxdFtEqnPDwaiq4N_Vt5TLqJCx2c2nsl1Kuyhj8wiF0agLWgvkLsDevjBXpuDKUR1Zyms5DsA==
-  URL: http://gem904bigscreens:8086
+  ## Quantity to be monitored
+  Monitorables: ["VMon","IMon","I0Set","V0Set","Pw","Status"]
+  ## Bool to specifty it is a GEM detector
+  isGEMDetector: True
+  ## Mainframe and board coordinates
+  HW:
+    CAENHV_BOARD_TYPE: SY1527
+    CAENHV_LINK_TYPE: TCPIP
+    CAENHV_BOARD_ADDRESS: 128.141.143.248
+    CAENHV_USER: gemuser
+    CAENHV_PASSWORD: gemuser
+    SLOT: 5
+    LAYER: 2 ## If TYPE == GEM_Detecor specify layer, otherwise specify channels to be monitored in a list [1,...]
+  ## influxDB coordinates
+  influxDB:
+    DB_BUCKET: GEM 904 integration stand
+    ORG: CMS GEM project
+    TOKEN: mDg5QyXVh3DxQcxdFtEqnPDwaiq4N_Vt5TLqJCx2c2nsl1Kuyhj8wiF0agLWgvkLsDevjBXpuDKUR1Zyms5DsA==
+    URL: http://gem904bigscreens:8086
 
 IntegrationStand_Scintillator:
   CAENHV_BOARD_TYPE: SY1527
