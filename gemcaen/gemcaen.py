@@ -93,7 +93,7 @@ class BaseBoard:
         return  channel_names_map,channel_quantities_map
 
     def set_channels(self,channels_list:list):
-        if all( avail_channel in self._channels for desired_channel in channels_list): ## parsed channel list is contained in the available channels
+        if all( channel in channels_list for channel in self._channels): ## parsed channel list is contained in the available channels (self._channels)
             self.n_channels = len(channels_list)
             self._channels = channels_list
 
