@@ -1,4 +1,5 @@
 from gemcaen import BaseBoard,GemBoard,load_config
+from threading import Thread
 from datetime import datetime
 import pathlib
 import json
@@ -9,10 +10,11 @@ from deepdiff import DeepDiff
 import influxdb_client
 from influxdb_client.client.write_api import SYNCHRONOUS
 
-class BaseLogger:
+class BaseLogger(Thread):
     __outdir = pathlib.Path(__file__).parent / "logs"
   
     def __init__(self,setup_name,rate=2,monitored_quantities=list()):
+        super().__init__()
         self.setup_name = setup_name
         self.outfile = self.__outdir / str("log_"+self.setup_name+".log")
         
@@ -76,7 +78,7 @@ class BaseLogger:
                     point = influxdb_client.Point("HV").tag("ChannelName",channel_names[ch%7]).field(quantity,value)
                     write_api.write(bucket=influx_config["bucket"], org=influx_config["org"], record=point)
 
-    def log(self):
+    def run(self):
         prev_data = dict()
         with self.yieldBoard() as board:
             if self.update_board_quantities: board.set_monitorables(self.monitored_quantities)
