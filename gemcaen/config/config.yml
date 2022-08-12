@@ -1,7 +1,7 @@
 GEMBoard_Monitorables: [V0Set, I0Set, Trip, VMon, IMon, IMonReal, IMonDet, Status, Temp, Pw, ImRange, ZCDetect, ZCAdjust]
 ME0CosmicStand: 
   ## Quantity to be monitored
-  Monitorables: ["VMon","IMon","I0Set","V0Set","Pw","Status"]
+  Monitorables: ["VMon","IMon","I0Set","V0Set","Pw","Status","Ieq"]
   ## Bool to specifty it is a GEM detector
   isGEMDetector: True
   ## Mainframe and board coordinates
@@ -22,7 +22,7 @@ ME0CosmicStand:
 
 IntegrationStand: 
   ## Quantity to be monitored
-  Monitorables: ["VMon","IMon","I0Set","V0Set","Pw","Status"]
+  Monitorables: ["VMon","IMon","I0Set","V0Set","Pw","Status","Ieq"]
   ## Bool to specifty it is a GEM detector
   isGEMDetector: True
   ## Mainframe and board coordinates
@@ -41,6 +41,29 @@ IntegrationStand:
     TOKEN: mDg5QyXVh3DxQcxdFtEqnPDwaiq4N_Vt5TLqJCx2c2nsl1Kuyhj8wiF0agLWgvkLsDevjBXpuDKUR1Zyms5DsA==
     URL: http://gem904bigscreens:8086
 
+
+904QC:
+  ## Quantity to be monitored
+  Monitorables: ["VMon","IMon","I0Set","V0Set","Pw","Status","Ieq"]
+  ## Bool to specifty it is a GEM detector
+  isGEMDetector: True
+  ## Mainframe and board coordinates
+  HW:
+    CAENHV_BOARD_TYPE: SY1527
+    CAENHV_LINK_TYPE: TCPIP
+    CAENHV_BOARD_ADDRESS: 128.141.143.203
+    CAENHV_USER: admin
+    CAENHV_PASSWORD: admin
+    SLOT: 0
+    LAYER: 1 ## If TYPE == GEM_Detecor specify layer, otherwise specify channels to be monitored in a list [1,...]    LAYER: 1
+  ## influxDB coordinates
+  influxDB:
+    DB_BUCKET: GEM 904 RnD
+    ORG: CMS GEM project
+    TOKEN: mDg5QyXVh3DxQcxdFtEqnPDwaiq4N_Vt5TLqJCx2c2nsl1Kuyhj8wiF0agLWgvkLsDevjBXpuDKUR1Zyms5DsA==
+    URL: http://gem904bigscreens:8086
+
+
 IntegrationStand_Scintillator:
   CAENHV_BOARD_TYPE: SY1527
   CAENHV_LINK_TYPE: TCPIP
@@ -49,13 +72,7 @@ IntegrationStand_Scintillator:
   CAENHV_PASSWORD: banana
   SLOT: 2
 
-904QC:
-  CAENHV_BOARD_TYPE: SY1527
-  CAENHV_LINK_TYPE: TCPIP
-  CAENHV_BOARD_ADDRESS: 128.141.143.203
-  CAENHV_USER: banana
-  CAENHV_PASSWORD: banana
-  SLOT: 0
+
 P5GE21M1:
   CAENHV_BOARD_TYPE: SY4527
   CAENHV_LINK_TYPE: TCPIP

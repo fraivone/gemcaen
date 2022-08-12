@@ -25,6 +25,9 @@ class BaseLogger(Thread):
         self.update_board_quantities = False
   
     def set_monitored_quantities(self,monitored_quantities:list):
+        ## TODO
+        # Check that the actual quantities are parsed to the gemboard class
+        # Implement a similar system for set_channels
         self.monitored_quantities = monitored_quantities
         self.update_board_quantities = True
     

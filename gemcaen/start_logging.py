@@ -10,8 +10,6 @@ def load_config(setup_name):
     with CONFIG_PATH.open() as ymlfile:
         cfg = yaml.full_load(ymlfile)
     cfg = cfg[setup_name]
-    print(setup_name,cfg)
-    input()
     check_config(setup_name,cfg)
     return cfg
 

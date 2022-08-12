@@ -11,6 +11,7 @@ from pycaenhv.errors import CAENHVError
 
 ## TODO 
 # Possible to simplify channel maging? The variables _channels,n_channels,channel_names_map,channel_quantities_map may be merged into 2
+# Catch communication errors coming from pycaen
 
 
 class BaseBoard:
@@ -93,7 +94,7 @@ class BaseBoard:
         return  channel_names_map,channel_quantities_map
 
     def set_channels(self,channels_list:list):
-        if all( channel in channels_list for channel in self._channels): ## parsed channel list is contained in the available channels (self._channels)
+        if all( channel in self._channels for channel in channels_list): ## parsed channel list is contained in the available channels (self._channels)
             self.n_channels = len(channels_list)
             self._channels = channels_list
 
@@ -179,7 +180,9 @@ class GemBoard(BaseBoard):
             self.set_channels(list(range(7)))
         else:
             self.set_channels(list(range(7,14)))
-        
+
+        return self
+
     
     def __exit__(self,type,value,traceback):
         super().__exit__(type,value,traceback)
