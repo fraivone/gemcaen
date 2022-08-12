@@ -21,7 +21,7 @@ def load_config():
 class BaseBoard:
     """ Base class to handle a CAEN board """
 
-    __cfg_keys = ["CAENHV_BOARD_TYPE","CAENHV_LINK_TYPE","CAENHV_BOARD_ADDRESS","CAENHV_USER","CAENHV_PASSWORD","SLOT"] 
+    _cfg_keys = ["CAENHV_BOARD_TYPE","CAENHV_LINK_TYPE","CAENHV_BOARD_ADDRESS","CAENHV_USER","CAENHV_PASSWORD","SLOT"] 
 
     def __init__(self,setup_name):
         self._inside_context = False
@@ -67,7 +67,7 @@ class BaseBoard:
 
     def check_good_config(self):
         if self.setup_name in load_config().keys():
-            if all(key in load_config()[self.setup_name].keys()  for key in self.__cfg_keys):
+            if all(key in load_config()[self.setup_name].keys()  for key in self._cfg_keys):
                 return True
         raise ValueError(self.setup_name, " has an invalid/incomplete configuration in ",CONFIG_PATH)
 
@@ -165,9 +165,12 @@ class BaseBoard:
 
 class GemBoard(BaseBoard):
     __Divider_Resistors = {"G3BOT":0.625007477,"G3TOP":0.525001495,"G2BOT":0.874992523,"G2TOP":0.550002991,"G1BOT":0.438004665,"G1TOP":0.560006579,"G0BOT":1.125007477}
-    def __init__(self,setup_name,gem_layer=None):
+    def __init__(self,setup_name):
         super().__init__(setup_name) ## init parent class
-        self.gem_layer = gem_layer
+        self._cfg_keys.append("LAYER") #GEM board must be specified with layer
+        self.check_good_config()
+        self.gem_layer = self.cfg["LAYER"]
+        self._monitorables = ["VMon","IMon","I0Set","V0Set","Pw","Status","Ieq"]
         
     def __enter__(self):
         super().__enter__()
@@ -189,7 +192,7 @@ class GemBoard(BaseBoard):
     
     def __exit__(self,type,value,traceback):
         super().__exit__(type,value,traceback)
-    
+
     def channel_IEq(self,ch,VMon):
         ch_name = self.channel_names_map[ch]
         resistor = self.__Divider_Resistors[ ch_name.split("_")[-1] ]
@@ -211,6 +214,20 @@ class GemBoard(BaseBoard):
             channel_IEq = self.channel_IEq(ch,VMon)
             rows.append([ch_name,VMon,channel_IEq,PW])
         self.table_printer(cols,rows)
+
+    def monitor(self):
+        self._ContextManager_ensure()
+        monitored_data = dict()
+        for ch in self._channels:
+            channel_data = dict()
+            for mon in self._monitorables:
+                if mon == "Ieq":
+                    channel_data[mon] = self.channel_IEq( ch , self.get_channel_value(ch,"VMon") )
+                else:
+                    channel_data[mon] = self.get_channel_value(ch,mon)
+            monitored_data[ch] = channel_data
+        return monitored_data
+
     
     def set_Ieq(self,ieq): ## under development
         self.set_monitorables(["VMon","Pw"])

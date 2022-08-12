@@ -1,4 +1,4 @@
-from gemcaen import BaseBoard,GemBoard
+from gemcaen import BaseBoard,GemBoard,load_config
 from datetime import datetime
 import pathlib
 import json
@@ -33,12 +33,18 @@ class BaseLogger:
         if round(size / 1024**2,2) > maxsize: ## 3 MB per log file
             now = datetime.now()
             year, month, day, hour, minute = now.year, now.month, now.day, now.hour, now.minute
-            os.rename(self.outfile, __outdir / "{year}{month}{day}_{hour}{minute}_{self.setup_name}.log")
+            os.rename(self.outfile, self.__outdir / f"{year}{month}{day}_{hour}{minute}_{self.setup_name}.log")
 
     def yieldBoard(self):
-        yield  BaseBoard(self.setup_name)
+        return BaseBoard(self.setup_name)
         
     def updateDB(self,data):
+        cfg = load_config()[self.setup_name]
+        DB_BUCKET = cfg["DB_BUCKET"]
+        ORG = cfg["ORG"]
+        TOKEN =  cfg["TOKEN"]
+        URL =  cfg["URL"]
+        
         channel_names = [
             "G3Bot",
             "G3Top",
@@ -50,10 +56,10 @@ class BaseLogger:
         ]
 
         influx_config = dict(
-            bucket = "GEM 904 integration stand",
-            org = "CMS GEM project",
-            token = "mDg5QyXVh3DxQcxdFtEqnPDwaiq4N_Vt5TLqJCx2c2nsl1Kuyhj8wiF0agLWgvkLsDevjBXpuDKUR1Zyms5DsA==",
-            url = "http://gem904bigscreens:8086"
+            bucket = DB_BUCKET,
+            org = ORG,
+            token = TOKEN,
+            url = URL
         )
 
         # Instantiate InfluxDB client and connect:
@@ -67,33 +73,12 @@ class BaseLogger:
         for ch,values in data.items():
             if type(ch) == int:
                 for quantity,value in values.items():
-                    point = influxdb_client.Point(self.setup_name).tag("ChannelName",channel_names[ch%7]).field(quantity,value)
+                    point = influxdb_client.Point("HV").tag("ChannelName",channel_names[ch%7]).field(quantity,value)
                     write_api.write(bucket=influx_config["bucket"], org=influx_config["org"], record=point)
 
     def log(self):
         prev_data = dict()
-        with BaseBoard(self.setup_name) as board:
-            if self.update_board_quantities: board.set_monitorables(self.monitored_quantities)
-            while True:
-                time.sleep(self.rate)
-                monitored_data = board.log()
-                if DeepDiff(monitored_data, prev_data, verbose_level=2, exclude_paths=["root['time']"]) == {}:
-                    print(f"[{datetime.today().strftime('%Y-%m-%d %H:%M:%S')}] No changes for setup {self.setup_name}")
-                    continue
-                self.store_dict(monitored_data)
-                print(f"[{datetime.today().strftime('%Y-%m-%d %H:%M:%S')}] Stored data for setup {self.setup_name}")
-                prev_data = monitored_data
-        
-
-class GemLogger(BaseLogger):
-    
-    def __init__(self,setup_name,gem_layer=None):
-        super().__init__(setup_name) ## init parent class
-        self.gem_layer = gem_layer
-    
-    def log(self):
-        prev_data = dict()
-        with GemBoard(self.setup_name,self.gem_layer) as board:
+        with self.yieldBoard() as board:
             if self.update_board_quantities: board.set_monitorables(self.monitored_quantities)
             while True:
                 time.sleep(self.rate)
@@ -106,10 +91,19 @@ class GemLogger(BaseLogger):
                 self.updateDB(monitored_data)
                 print(f"[{datetime.today().strftime('%Y-%m-%d %H:%M:%S')}] Updated DB for setup {self.setup_name}")
                 prev_data = monitored_data
+        
+
+class GemLogger(BaseLogger):
+    
+    def __init__(self,setup_name):
+        super().__init__(setup_name) ## init parent class
+
+    def yieldBoard(self):
+        return  GemBoard(self.setup_name)
 
 
 if __name__ == '__main__':
 
 
-    b = GemLogger("IntegrationStand",1)
+    b = GemLogger("ME0CosmicStand")
     b.log()
