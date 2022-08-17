@@ -132,7 +132,14 @@ class BaseBoard:
     def get_channel_value(self,channel_index:int,quantity:str):
         self._ContextManager_ensure()
         if self.validChannel(channel_index) and self.validQuantity(channel_index,quantity):
-            return get_channel_parameter(self.handle,self.board_slot,channel_index,quantity)
+            try:
+                return get_channel_parameter(self.handle,self.board_slot,channel_index,quantity)
+            except Exception as e:
+                print(e)
+                print(f"Found a problem in retrieving the channel. Retying in 5 secs")
+                time.sleep(5)
+                self.get_channel_value(channel_index,quantity)
+                
                 
     def set_channel_value(self,channel_index:int,quantity:str,value):
         self._ContextManager_ensure()
