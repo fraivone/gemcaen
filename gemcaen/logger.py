@@ -89,22 +89,27 @@ class BaseLogger(Thread):
 
     def run(self):
         prev_data = dict()
+        last_logged_time = 0
         with self.yieldBoard() as board:
             if self.update_board_quantities: board.set_monitorables(self.monitored_quantities)
             self.channel_names_map = board.channel_names_map
             while True:
                 time.sleep(self.rate)
                 monitored_data = board.log()
+
+                ## Only log and store data if there was a change && Store at least 1 point every 5 mins
                 ## Check if data are different wrt the previous reading
-                if DeepDiff(monitored_data, prev_data, verbose_level=2, exclude_paths=["root['time']"]) == {}:
-                    print(f"[{datetime.today().strftime('%Y-%m-%d %H:%M:%S')}] No changes for setup {self.setup_name}")
+                if DeepDiff(monitored_data, prev_data, verbose_level=2, exclude_paths=["root['time']"]) == {} and monitored_data['time'] - last_logged_time < 5 * 60:
+                    #print(f"[{datetime.today().strftime('%Y-%m-%d %H:%M:%S')}] No changes for setup {self.setup_name}")
                     continue
 
                 self.store_dict(monitored_data)
-                print(f"[{datetime.today().strftime('%Y-%m-%d %H:%M:%S')}] Stored data for setup {self.setup_name}")
+                #print(f"[{datetime.today().strftime('%Y-%m-%d %H:%M:%S')}] Stored data for setup {self.setup_name}")
                 self.updateDB(monitored_data)
                 print(f"[{datetime.today().strftime('%Y-%m-%d %H:%M:%S')}] Updated DB for setup {self.setup_name}")
                 prev_data = monitored_data
+                last_logged_time = monitored_data['time']
+                
 
 
 if __name__=='__main__':
