@@ -39,6 +39,8 @@ class BaseBoard:
         self.n_channels = self.crate_map["channels"][self.board_slot]
         self._channels = list(range(self.n_channels)) ## take all possible channels
         self.channel_names_map, self.channel_quantities_map = self.map_channels()  ## channel_<name/quant>_map[ch_index] = ch_<name/quant>
+
+        if "CHANNELS" in self.cfg.keys(): self.set_channels(self.cfg["CHANNELS"])  ## use only those specified in the config file, if any
         
         return self
     

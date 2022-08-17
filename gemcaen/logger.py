@@ -10,6 +10,7 @@ from deepdiff import DeepDiff
 import influxdb_client
 from influxdb_client.client.write_api import SYNCHRONOUS
 
+
 class BaseLogger(Thread):
     __outdir = pathlib.Path(__file__).parent / "logs"
   
@@ -23,6 +24,7 @@ class BaseLogger(Thread):
         self.rate = rate
         self.monitored_quantities = []
         self.update_board_quantities = False
+        self.channel_names_map = {} ## Map containing the map from channel number to channel name. Gets filled when the comm is opened
   
     def set_monitored_quantities(self,monitored_quantities:list):
         ## TODO
@@ -40,7 +42,7 @@ class BaseLogger(Thread):
         if round(size / 1024**2,2) > maxsize: ## 3 MB per log file
             now = datetime.now()
             year, month, day, hour, minute = now.year, now.month, now.day, now.hour, now.minute
-            os.rename(self.outfile, self.__outdir / f"{year}{month}{day}_{hour}{minute}_{self.setup_name}.log")
+            os.rename(self.outfile, self.__outdir / f"{year:04d}{month:02d}{day:02d}_{hour:02d}{minute:02d}_{self.setup_name}.log")
 
     def yieldBoard(self):
         if self.isGEMDetector:
@@ -49,8 +51,8 @@ class BaseLogger(Thread):
             return BaseBoard(self.cfg_HW)
         
     def updateDB(self,data):
-        ## TODO
-        # hot fix to make it work for GEM electrodes. To be taken from the board class
+        ## Channel name alias, as we want them to appear in the DB
+        ## used only if isGEMDetector
         channel_aliases = [
             "G3Bot",
             "G3Top",
@@ -79,13 +81,17 @@ class BaseLogger(Thread):
         for ch,values in data.items():
             if type(ch) == int:
                 for quantity,value in values.items():
-                    point = influxdb_client.Point("HV").tag("ChannelName",channel_aliases[ch%7]).field(quantity,value)
+                    if self.isGEMDetector:
+                        point = influxdb_client.Point("HV").tag("ChannelName",channel_aliases[ch%7]).field(quantity,value)
+                    else:
+                        point = influxdb_client.Point("CAEN_Board_Monitor").tag("ChannelName",self.channel_names_map[ch]).field(quantity,value)
                     write_api.write(bucket=influx_config["bucket"], org=influx_config["org"], record=point)
 
     def run(self):
         prev_data = dict()
         with self.yieldBoard() as board:
             if self.update_board_quantities: board.set_monitorables(self.monitored_quantities)
+            self.channel_names_map = board.channel_names_map
             while True:
                 time.sleep(self.rate)
                 monitored_data = board.log()
@@ -99,3 +105,7 @@ class BaseLogger(Thread):
                 self.updateDB(monitored_data)
                 print(f"[{datetime.today().strftime('%Y-%m-%d %H:%M:%S')}] Updated DB for setup {self.setup_name}")
                 prev_data = monitored_data
+
+
+if __name__=='__main__':
+    pass

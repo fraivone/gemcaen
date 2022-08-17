@@ -71,7 +71,7 @@ for setup_name in parsed_setupnames:
     Monitorables = cfg["Monitorables"]
 
     ## logger class now inherits from Thread
-    logger = BaseLogger(setup_name,HW_Config,DB_Config,isGEMDetector)
+    logger = BaseLogger(setup_name,HW_Config,DB_Config,isGEMDetector,rate=0.5)
     logger.set_monitored_quantities(Monitorables)
     loggers[setup_name] = logger
 
