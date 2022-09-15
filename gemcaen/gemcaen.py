@@ -29,7 +29,7 @@ class BaseBoard:
     def __enter__(self):
         self._inside_context = True
 
-        print(f"Init mainframe {self.hostname} ({self.cfg['CAENHV_BOARD_ADDRESS']})")
+        #print(f"Init mainframe {self.hostname} ({self.cfg['CAENHV_BOARD_ADDRESS']})")
         self.handle = self.get_cratehandle()
         self.crate_map = get_crate_map(self.handle)
 
@@ -45,7 +45,7 @@ class BaseBoard:
         return self
     
     def close(self):
-        print(f"Deinit mainframe {self.hostname} ({self.cfg['CAENHV_BOARD_ADDRESS']})")
+        #print(f"Deinit mainframe {self.hostname} ({self.cfg['CAENHV_BOARD_ADDRESS']})")
         deinit_system(self.handle)
 
     def __exit__(self,type,value,traceback):
