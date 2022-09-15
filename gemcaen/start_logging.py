@@ -2,6 +2,7 @@ from argparse import RawTextHelpFormatter
 import argparse
 from logger import *
 import yaml
+import threading
 
 CONFIG_PATH = pathlib.Path(__file__).parent / "config/config.yml"
 
@@ -60,6 +61,7 @@ args = parser.parse_args()
 
 loggers = {}
 parsed_setupnames = args.setupNames
+lock = threading.Lock()
 
 for setup_name in parsed_setupnames:
     ## Load config
@@ -71,7 +73,7 @@ for setup_name in parsed_setupnames:
     Monitorables = cfg["Monitorables"]
 
     ## logger class now inherits from Thread
-    logger = BaseLogger(setup_name,HW_Config,DB_Config,isGEMDetector,rate=2)
+    logger = BaseLogger(setup_name,HW_Config,DB_Config,isGEMDetector,lock,rate=3)
     logger.set_monitored_quantities(Monitorables)
     loggers[setup_name] = logger
 
