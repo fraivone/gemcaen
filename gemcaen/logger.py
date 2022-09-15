@@ -14,7 +14,7 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 class BaseLogger(Thread):
     __outdir = pathlib.Path(__file__).parent / "logs"
   
-    def __init__(self,setup_name,cfg_HW,cfg_DB,isGEMDetector,rate=5):
+    def __init__(self,setup_name,cfg_HW,cfg_DB,isGEMDetector,lock,rate=5):
         super().__init__()
         self.setup_name = setup_name
         self.outfile = self.__outdir / str("log_"+self.setup_name+".log")        
@@ -25,6 +25,7 @@ class BaseLogger(Thread):
         self.monitored_quantities = []
         self.update_board_quantities = False
         self.channel_names_map = {} ## Map containing the map from channel number to channel name. Gets filled when the comm is opened
+        self.lock = lock
   
     def set_monitored_quantities(self,monitored_quantities:list):
         ## TODO
@@ -90,25 +91,28 @@ class BaseLogger(Thread):
     def run(self):
         prev_data = dict()
         last_logged_time = 0
-        with self.yieldBoard() as board:
-            if self.update_board_quantities: board.set_monitorables(self.monitored_quantities)
-            self.channel_names_map = board.channel_names_map
-            while True:
-                time.sleep(self.rate)
+        while True:
+            self.lock.acquire()
+            with self.yieldBoard() as board:
+                if self.update_board_quantities: board.set_monitorables(self.monitored_quantities)
+                self.channel_names_map = board.channel_names_map
                 monitored_data = board.log()
+            self.lock.release()
 
-                ## Only log and store data if there was a change && Store at least 1 point every 5 mins
-                ## Check if data are different wrt the previous reading
-                if DeepDiff(monitored_data, prev_data, verbose_level=2, exclude_paths=["root['time']"]) == {} and monitored_data['time'] - last_logged_time < 5 * 60:
-                    #print(f"[{datetime.today().strftime('%Y-%m-%d %H:%M:%S')}] No changes for setup {self.setup_name}")
-                    continue
+            ## Only log and store data if there was a change && Store at least 1 point every 5 mins
+            ## Check if data are different wrt the previous reading
+            if DeepDiff(monitored_data, prev_data, verbose_level=2, exclude_paths=["root['time']"]) == {} and monitored_data['time'] - last_logged_time < 5 * 60:
+                #print(f"[{datetime.today().strftime('%Y-%m-%d %H:%M:%S')}] No changes for setup {self.setup_name}")
+                pass
 
+            else:
                 self.store_dict(monitored_data)
                 #print(f"[{datetime.today().strftime('%Y-%m-%d %H:%M:%S')}] Stored data for setup {self.setup_name}")
                 self.updateDB(monitored_data)
                 print(f"[{datetime.today().strftime('%Y-%m-%d %H:%M:%S')}] Updated DB for setup {self.setup_name}")
                 prev_data = monitored_data
                 last_logged_time = monitored_data['time']
+            time.sleep(self.rate)
                 
 
 
