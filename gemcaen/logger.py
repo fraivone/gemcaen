@@ -14,14 +14,14 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 class BaseLogger(Thread):
     __outdir = pathlib.Path(__file__).parent / "logs"
   
-    def __init__(self,setup_name,cfg_HW,cfg_DB,isGEMDetector,lock,rate=5):
+    def __init__(self,setup_name,cfg_HW,cfg_DB,isGEMDetector,lock,sleep=5):
         super().__init__()
         self.setup_name = setup_name
         self.outfile = self.__outdir / str("log_"+self.setup_name+".log")        
         self.cfg_HW = cfg_HW
         self.cfg_DB = cfg_DB      
         self.isGEMDetector = isGEMDetector
-        self.rate = rate
+        self.sleep_time = sleep
         self.monitored_quantities = []
         self.update_board_quantities = False
         self.channel_names_map = {} ## Map containing the map from channel number to channel name. Gets filled when the comm is opened
@@ -112,7 +112,7 @@ class BaseLogger(Thread):
                 print(f"[{datetime.today().strftime('%Y-%m-%d %H:%M:%S')}] Updated DB for setup {self.setup_name}")
                 prev_data = monitored_data
                 last_logged_time = monitored_data['time']
-            time.sleep(self.rate)
+            time.sleep(self.sleep_time)
                 
 
 

@@ -15,8 +15,8 @@ def load_config(setup_name):
     return cfg
 
 def check_config(setup_name,cfg):
-    ## Required keys
-    CFG_REQ_KEYS = ["HW","influxDB","Monitorables","isGEMDetector"] 
+    ## Required keys  
+    CFG_REQ_KEYS = ["HW","influxDB","Monitorables","isGEMDetector","HoldOffTime"] 
     HW_REQ_KEYS = ["CAENHV_BOARD_TYPE","CAENHV_LINK_TYPE","CAENHV_BOARD_ADDRESS","CAENHV_USER","CAENHV_PASSWORD","SLOT"] 
     DB_REQ_KEYS = ["DB_BUCKET","ORG","URL","TOKEN"]
     
@@ -68,12 +68,13 @@ for setup_name in parsed_setupnames:
     cfg = load_config(setup_name)
 
     isGEMDetector = cfg["isGEMDetector"]
+    HoldOffTime = cfg["HoldOffTime"]
     HW_Config = cfg["HW"]
     DB_Config = cfg["influxDB"]
     Monitorables = cfg["Monitorables"]
 
     ## logger class now inherits from Thread
-    logger = BaseLogger(setup_name,HW_Config,DB_Config,isGEMDetector,lock,rate=3)
+    logger = BaseLogger(setup_name,HW_Config,DB_Config,isGEMDetector,lock,sleep=HoldOffTime)
     logger.set_monitored_quantities(Monitorables)
     loggers[setup_name] = logger
 
