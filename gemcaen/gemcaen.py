@@ -72,6 +72,7 @@ class BaseBoard:
             return handle
         except CAENHVError as err:
             print(f"Got error: {err}\nExiting ...")
+            raise
 
     def validChannel(self,channel_index:int):
         self._ContextManager_ensure()

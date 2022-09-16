@@ -1,3 +1,4 @@
 # Python compiled files
 *.pyc
 gemcaen/logs/*
+gemcaen/config/config.yml

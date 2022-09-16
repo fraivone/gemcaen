@@ -6,6 +6,7 @@ import json
 import math
 import time
 import os
+import sys
 from deepdiff import DeepDiff
 import influxdb_client
 from influxdb_client.client.write_api import SYNCHRONOUS
@@ -93,10 +94,16 @@ class BaseLogger(Thread):
         last_logged_time = 0
         while True:
             self.lock.acquire()
-            with self.yieldBoard() as board:
-                if self.update_board_quantities: board.set_monitorables(self.monitored_quantities)
-                self.channel_names_map = board.channel_names_map
-                monitored_data = board.log()
+            try:
+                with self.yieldBoard() as board:
+                    if self.update_board_quantities: board.set_monitorables(self.monitored_quantities)
+                    self.channel_names_map = board.channel_names_map
+                    monitored_data = board.log()
+            except:
+                self.lock.release()
+                print("Unexpected error:", sys.exc_info()[0]," while logging for ",self.setup_name)
+                time.sleep(self.sleep_time)
+                continue
             self.lock.release()
 
             ## Only log and store data if there was a change && Store at least 1 point every 5 mins
