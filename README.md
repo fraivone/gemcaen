@@ -9,7 +9,7 @@ We use it to log our lab setups and display the status plots with Grafana.
 1. A poetry installation. Instructions [here](https://python-poetry.org/docs/#osx--linux--bashonwindows-install-instructions);
 1. Caen HV library `libcaenhvwrapper.so.6.1`. You can download the library [here](https://www.caen.it/download/?filter=CAEN%20HV%20Wrapper%20);
 1. `python 3.6.1` or newer;
-1. Patience, either the [old version](https://www.youtube.com/watch?v=ErvgV4P6Fzc) or a [more recent one](https://www.youtube.com/watch?v=ErvgV4P6Fzc);
+1. Patience, either the [old version](https://www.youtube.com/watch?v=ErvgV4P6Fzc) or a [more recent one](https://www.youtube.com/watch?v=273eSvOwpKk);
 #### Installation
 1. `git clone git@github.com:fraivone/gemcaen.git`;
 1. `cd gemcaen/`;
