@@ -1,8 +1,5 @@
-import pathlib
-import functools
 import tableformatter as tf
 import numbers
-import socket
 import time
 from datetime import datetime
 import sys
@@ -10,16 +7,7 @@ from pycaenhv.wrappers import init_system, deinit_system, get_board_parameters, 
 from pycaenhv.enums import CAENHV_SYSTEM_TYPE, LinkType
 from pycaenhv.errors import CAENHVError
 import pycaenhv
-import logging 
-
-
-def logconfig():
-    logging.basicConfig(format='[{asctime}] {threadName} {levelname} - {message}', datefmt='%B %d - %H:%M:%S',level=logging.DEBUG,style="{",handlers=[logging.FileHandler("debug.log"),logging.StreamHandler()])
-
-    logging.addLevelName( logging.DEBUG, "\033[1;90m%s\033[1;0m" % logging.getLevelName(logging.DEBUG))
-    logging.addLevelName( logging.INFO, "\033[1;92m%s\033[1;0m" % logging.getLevelName(logging.INFO))
-    logging.addLevelName( logging.WARNING, "\033[1;93m%s\033[1;0m" % logging.getLevelName(logging.WARNING))
-    logging.addLevelName( logging.ERROR, "\033[1;31m%s\033[1;0m" % logging.getLevelName(logging.ERROR))
+from prompt_logger import logger as logging
 
 def throwVomit(value=16):
     global timestamp
@@ -42,7 +30,7 @@ class BaseMainframe:
 
     def __enter__(self):
         try:
-            logging.debug(f"Init mainframe ({self.cfg['CAENHV_BOARD_ADDRESS']})")
+            logging.info(f"Init mainframe ({self.cfg['CAENHV_BOARD_ADDRESS']})")
             self.handle = self.get_cratehandle()
         except pycaenhv.errors.CAENHVError as a:
             logging.error(f"... failed")
@@ -54,7 +42,7 @@ class BaseMainframe:
     
     def close(self):
         if self.handle != None:
-            logging.debug(f"Deinit mainframe ({self.cfg['CAENHV_BOARD_ADDRESS']})")
+            logging.info(f"Deinit mainframe ({self.cfg['CAENHV_BOARD_ADDRESS']})")
             deinit_system(self.handle)
             self.handle = None
         
@@ -64,7 +52,6 @@ class BaseMainframe:
         if type == pycaenhv.errors.CAENHVError:
             logging.error(f"Handling exception of type {type}. Exception value: {value}")
             return True
-
 
     def get_cratehandle(self):
         system_type = CAENHV_SYSTEM_TYPE[self.cfg['CAENHV_BOARD_TYPE']]
@@ -173,7 +160,6 @@ class BaseBoard:
     def log(self):
         monitored_data = self.monitor()
 
-        monitored_data["ip"] = self.cfg['CAENHV_BOARD_ADDRESS']
         monitored_data["slot"] = self.board_slot
         monitored_data["time"] = time.time()
 
@@ -185,7 +171,7 @@ class GemBoard(BaseBoard):
     def __init__(self,cfg_Board,handle):
         super().__init__(cfg_Board,handle) ## init parent class
         self.gem_layer = self.cfg["LAYER"]
-       self._monitorables = ["VMon","IMon","I0Set","V0Set","Pw","Status","Ieq"]
+        self._monitorables = ["VMon","IMon","I0Set","V0Set","Pw","Status","Ieq"]
 
         if self.gem_layer not in [1,2]: ## badly parsed layer --> deinit mainframe and raise error
             raise ValueError("Invalid gem_layer parsed ",gem_layer) ## parse gem layer
@@ -193,8 +179,6 @@ class GemBoard(BaseBoard):
             raise ValueError(f"Board {self.board_name!r} on slot {self.board_slot} not a GEM HV Board.") ## ensure GEM HV board
         if self.gem_layer == 1: self.set_channels(list(range(7)))
         else: self.set_channels(list(range(7,14)))
-
-        return self
 
     def channel_IEq(self,ch,VMon):
         ch_name = self.channel_names_map[ch]
@@ -218,6 +202,9 @@ class GemBoard(BaseBoard):
         self.table_printer(cols,rows)
 
     def monitor(self):
+        if self.handle == None:
+            raise ValueError("Invalid Mainframe handle ",self.handle)
+
         monitored_data = dict()
         for ch in self._channels:
             channel_data = dict()

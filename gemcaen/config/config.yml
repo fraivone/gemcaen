@@ -1,176 +1,46 @@
-GEMBoard_Monitorables: [V0Set, I0Set, Trip, VMon, IMon, IMonReal, IMonDet, Status, Temp, Pw, ImRange, ZCDetect, ZCAdjust]
-ME0CosmicStand: 
-  ## Quantity to be monitored
+### EXAMPLE: Monitor HV of GEM Detector
+## Setup name, MUST be unqiue
+ME0_0001_CERN:
+  ## Quantities to be monitored
   Monitorables: ["VMon","IMon","I0Set","V0Set","Pw","Status","Ieq"]
-  ## Bool to specifty it is a GEM detector
+  ## sleep time between 2 subsequent logs, in seconds
+  HoldOffTime: 3
+  ## Bool to specifty it is a GEM detector. If TRUE 7 channels are monitored. If FALSE, single channel monitor.
   isGEMDetector: True
-  ## Mainframe and board coordinates
-  HW:
+  ## CAEN Mainframe coordinates	
+  MAINFRAME: 
     CAENHV_BOARD_TYPE: SY4527
     CAENHV_LINK_TYPE: TCPIP
-    CAENHV_BOARD_ADDRESS: 128.141.143.186
-    CAENHV_USER: admin
-    CAENHV_PASSWORD: admin
+    CAENHV_BOARD_ADDRESS: 128.xxx.xxx.186
+    CAENHV_USER: bananas
+    CAENHV_PASSWORD: bananas
+  ## CAEN Board coordinates
+  BOARD:
     SLOT: 0
-    LAYER: 1  ## If TYPE == GEM_Detecor specify layer, otherwise specify channels to be monitored in a list [1,...]
+    ## If TYPE == GEM_Detecor config layer must be specified. Otherwise specify channels  to be monitored.    
+    LAYER: 1
   ## influxDB coordinates
   influxDB:
     DB_BUCKET: GEM 904 cosmic ME0 stand
     ORG: CMS GEM project
-    TOKEN: mDg5QyXVh3DxQcxdFtEqnPDwaiq4N_Vt5TLqJCx2c2nsl1Kuyhj8wiF0agLWgvkLsDevjBXpuDKUR1Zyms5DsA==
+    TOKEN: averylongcombinationoflettersnumbersandspecialchars
     URL: http://gem904bigscreens:8086
-
-IntegrationStand: 
-  ## Quantity to be monitored
-  Monitorables: ["VMon","IMon","I0Set","V0Set","Pw","Status","Ieq"]
-  ## Bool to specifty it is a GEM detector
+### EXAMPLE: Monitor LV of GEM Detector
+ME0_0001_CERN_LV:
+  Monitorables: ["VMon","IMon","Pw"]
+  HoldOffTime: 3
   isGEMDetector: True
-  ## Mainframe and board coordinates
-  HW:
-    CAENHV_BOARD_TYPE: SY1527
-    CAENHV_LINK_TYPE: TCPIP
-    CAENHV_BOARD_ADDRESS: 128.141.143.248
-    CAENHV_USER: gemuser
-    CAENHV_PASSWORD: gemuser
-    SLOT: 5
-    LAYER: 2 ## If TYPE == GEM_Detecor specify layer, otherwise specify channels to be monitored in a list [1,...]
-  ## influxDB coordinates
-  influxDB:
-    DB_BUCKET: GEM 904 integration stand
-    ORG: CMS GEM project
-    TOKEN: mDg5QyXVh3DxQcxdFtEqnPDwaiq4N_Vt5TLqJCx2c2nsl1Kuyhj8wiF0agLWgvkLsDevjBXpuDKUR1Zyms5DsA==
-    URL: http://gem904bigscreens:8086
-
-
-GE11Integration_Short: 
-  ## Quantity to be monitored
-  Monitorables: ["VMon","IMon","I0Set","V0Set","Pw","Status","Ieq"]
-  ## Bool to specifty it is a GEM detector
-  isGEMDetector: True
-  ## Mainframe and board coordinates
-  HW:
-    CAENHV_BOARD_TYPE: SY1527
-    CAENHV_LINK_TYPE: TCPIP
-    CAENHV_BOARD_ADDRESS: 128.141.143.248
-    CAENHV_USER: gemuser
-    CAENHV_PASSWORD: gemuser
-    SLOT: 4
-    LAYER: 1 ## If TYPE == GEM_Detecor specify layer, otherwise specify channels to be monitored in a list [1,...]
-  ## influxDB coordinates
-  influxDB:
-    DB_BUCKET: GEM 904 GE11 short
-    ORG: CMS GEM project
-    TOKEN: mDg5QyXVh3DxQcxdFtEqnPDwaiq4N_Vt5TLqJCx2c2nsl1Kuyhj8wiF0agLWgvkLsDevjBXpuDKUR1Zyms5DsA==
-    URL: http://gem904bigscreens:8086
-
-
-
-GE11Integration_Long: 
-  ## Quantity to be monitored
-  Monitorables: ["VMon","IMon","I0Set","V0Set","Pw","Status","Ieq"]
-  ## Bool to specifty it is a GEM detector
-  isGEMDetector: True
-  ## Mainframe and board coordinates
-  HW:
-    CAENHV_BOARD_TYPE: SY1527
-    CAENHV_LINK_TYPE: TCPIP
-    CAENHV_BOARD_ADDRESS: 128.141.143.248
-    CAENHV_USER: gemuser
-    CAENHV_PASSWORD: gemuser
-    SLOT: 4
-    LAYER: 2 ## If TYPE == GEM_Detecor specify layer, otherwise specify channels to be monitored in a list [1,...]
-  ## influxDB coordinates
-  influxDB:
-    DB_BUCKET: GEM 904 GE11 long
-    ORG: CMS GEM project
-    TOKEN: mDg5QyXVh3DxQcxdFtEqnPDwaiq4N_Vt5TLqJCx2c2nsl1Kuyhj8wiF0agLWgvkLsDevjBXpuDKUR1Zyms5DsA==
-    URL: http://gem904bigscreens:8086
-
-
-
-904QC:
-  ## Quantity to be monitored
-  Monitorables: ["VMon","IMon","I0Set","V0Set","Pw","Status","Ieq"]
-  ## Bool to specifty it is a GEM detector
-  isGEMDetector: True
-  ## Mainframe and board coordinates
-  HW:
-    CAENHV_BOARD_TYPE: SY1527
-    CAENHV_LINK_TYPE: TCPIP
-    CAENHV_BOARD_ADDRESS: 128.141.143.203
-    CAENHV_USER: admin
-    CAENHV_PASSWORD: admin
-    SLOT: 0
-    LAYER: 1 ## If TYPE == GEM_Detecor specify layer, otherwise specify channels to be monitored in a list [1,...]    LAYER: 1
-  ## influxDB coordinates
-  influxDB:
-    DB_BUCKET: GEM 904 RnD
-    ORG: CMS GEM project
-    TOKEN: mDg5QyXVh3DxQcxdFtEqnPDwaiq4N_Vt5TLqJCx2c2nsl1Kuyhj8wiF0agLWgvkLsDevjBXpuDKUR1Zyms5DsA==
-    URL: http://gem904bigscreens:8086
-
-
-
-MAO:
-  ## Quantity to be monitored
-  Monitorables: ["VMon","IMon","Temp","Status"]
-  ## Bool to specifty it is a GEM detector
-  isGEMDetector: False
-  ## Mainframe and board coordinates
-  HW:
+  MAINFRAME:
     CAENHV_BOARD_TYPE: SY4527
     CAENHV_LINK_TYPE: TCPIP
-    CAENHV_BOARD_ADDRESS: 128.141.143.48
-    CAENHV_USER: admin
-    CAENHV_PASSWORD: admin
+    CAENHV_BOARD_ADDRESS: 128.xxx.xxx.186
+    CAENHV_USER: bananas
+    CAENHV_PASSWORD: bananas
+  BOARD:
     SLOT: 5
-    CHANNELS: [66,67] ## If TYPE == GEM_Detecor specify layer, otherwise specify channels to be monitored in a list [1,...]    LAYER: 1
-  ## influxDB coordinates
+    CHANNELS: [18]
   influxDB:
-    DB_BUCKET: GEM 904 MAO
+    DB_BUCKET: GEM 904 cosmic ME0 stand
     ORG: CMS GEM project
-    TOKEN: mDg5QyXVh3DxQcxdFtEqnPDwaiq4N_Vt5TLqJCx2c2nsl1Kuyhj8wiF0agLWgvkLsDevjBXpuDKUR1Zyms5DsA==
+    TOKEN: averylongcombinationoflettersnumbersandspecialchars
     URL: http://gem904bigscreens:8086
-
-
-
-IntegrationStand_Scintillator:
-  CAENHV_BOARD_TYPE: SY1527
-  CAENHV_LINK_TYPE: TCPIP
-  CAENHV_BOARD_ADDRESS: 128.141.143.248
-  CAENHV_USER: banana
-  CAENHV_PASSWORD: banana
-  SLOT: 2
-
-
-P5GE21M1:
-  CAENHV_BOARD_TYPE: SY4527
-  CAENHV_LINK_TYPE: TCPIP
-  CAENHV_BOARD_ADDRESS: 127.0.0.1
-  CAENHV_USER: banana
-  CAENHV_PASSWORD: banana
-  SLOT: 0
-P5GE21M2:
-  CAENHV_BOARD_TYPE: SY4527
-  CAENHV_LINK_TYPE: TCPIP
-  CAENHV_BOARD_ADDRESS: 127.0.0.1
-  CAENHV_USER: banana
-  CAENHV_PASSWORD: banana
-  SLOT: 0
-P5GE21M3:
-  CAENHV_BOARD_TYPE: SY4527
-  CAENHV_LINK_TYPE: TCPIP
-  CAENHV_BOARD_ADDRESS: 127.0.0.1
-  CAENHV_USER: banana
-  CAENHV_PASSWORD: banana
-  SLOT: 1
-P5GE21M4:
-  CAENHV_BOARD_TYPE: SY4527
-  CAENHV_LINK_TYPE: TCPIP
-  CAENHV_BOARD_ADDRESS: 127.0.0.1
-  CAENHV_USER: banana
-  CAENHV_PASSWORD: banana
-  SLOT: 1
-
-#ssh  -vL  2527:128.141.143.248:2527 fivone@lxplus.cern.ch   tunnel for 904
-#ssh -Nf -L 2527:gem-ge21-hv-01:2527 cmsusr-tunnel           tunnel for P5

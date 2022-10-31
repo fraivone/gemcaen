@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "gemcaen"
-version = "0.1.0"
+version = "0.2.0"
 description = ""
 authors = ["ivone"]
 
@@ -9,13 +9,14 @@ include = "gemcaen"
 
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = ">=3.6.1 , <4"
 pycaenhv = {git = "https://github.com/vasoto/pycaenhv.git"}
 PyYAML = "^6.0"
 setuptools = "^63.2.0"
 tableformatter = "^0.1.6"
 influxdb-client = "^1.31.0"
-deepdiff = "^5.8.1"
+deepdiff = "4.3.0"
+jsonpickle = "^2.2.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
