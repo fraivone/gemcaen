@@ -1,7 +1,9 @@
 Communication tool for CAEN boards installed in mainframes SY1527,SY2527 and SY4527. Triple-GEM specific options are available.
 Allows the monitoring and logging of the available channel quantities (i.e VMon, IMon, Temp, ...) and their storage on influxDB. 
 We use it to log our lab setups and display the status plots with Grafana.
+
 ---
+
 ### Installation
 #### Tools you need
 1. A poetry installation. Instructions [here](https://python-poetry.org/docs/#osx--linux--bashonwindows-install-instructions);
